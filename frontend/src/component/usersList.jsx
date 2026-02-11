@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 
-export default function UsersList() {
-  const [loadingId, setLoadingId] = useState(null); // État pour le chargement
+// AJOUT DE LA PROP onContactClick ICI
+export default function UsersList({ onContactClick }) {
+  const [loadingId, setLoadingId] = useState(null);
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
 
@@ -11,26 +12,15 @@ export default function UsersList() {
     api.get("users/")
       .then(res => setUsers(res.data))
       .catch(err => console.error(err));
-    }, []);
-    
-      const startConversation = async (userId) => {
-        try {
-          setLoadingId(userId); // Active le spinner pour cet utilisateur
-          const res = await api.post("conversations/start/", { user_id: userId });
-          navigate(`/chat/${res.data.id}`);
-        } catch (err) {
-          console.error("Erreur création conversation", err);
-        } finally {
-          setLoadingId(null); // Désactive le spinner
-        }
-      };
+  }, []);
 
   return (
     <div className="list-group list-group-flush shadow-sm rounded">
       {users.map((user) => (
         <button
           key={user.id}
-          onClick={() => startConversation(user.id)}
+          // CHANGEMENT ICI : On appelle onContactClick au lieu de startConversation
+          onClick={() => onContactClick(user)}
           className="list-group-item list-group-item-action d-flex align-items-center py-3 border-bottom"
           style={{ cursor: 'pointer' }}
         >
@@ -48,7 +38,7 @@ export default function UsersList() {
               {user.username}
             </h6>
             <small className="text-muted d-block text-truncate">
-              En ligne
+              {user.is_online ? "En ligne" : "Hors ligne"}
             </small>
           </div>
         </button>
@@ -56,9 +46,3 @@ export default function UsersList() {
     </div>
   );
 }
-
-
-// ... tes autres imports
-
-
- 

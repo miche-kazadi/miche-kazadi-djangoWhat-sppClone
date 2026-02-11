@@ -15,6 +15,6 @@ urlpatterns = [
     path('conversations/<int:conversation_id>/messages/', 
          views.MessageCreateView.as_view(), 
          name='conversation-messages'),
-
+    path('contacts/<int:pk>/', views.contact_detail, name='contact-detail'),
     path('', include(router.urls)),
 ]

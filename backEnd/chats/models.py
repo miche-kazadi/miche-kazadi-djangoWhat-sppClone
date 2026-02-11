@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 # --- 1. MODÈLE PROFIL ---
 class Profile(models.Model): 
@@ -44,5 +45,8 @@ class Message(models.Model):
         return f"{self.sender.username}: {self.content[:20]}"
 
 
-
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
 

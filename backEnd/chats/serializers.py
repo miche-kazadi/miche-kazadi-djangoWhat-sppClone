@@ -74,13 +74,41 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
-    # AJOUTE CECI : On récupère le statut directement depuis le profil
-    is_online = serializers.BooleanField(source='profile.is_online', read_only=True)
-    last_seen = serializers.DateTimeField(source='profile.last_seen', read_only=True)
+    is_online = serializers.SerializerMethodField()
+    last_seen = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'avatar', 'is_online', 'last_seen'] # Ajoute les champs ici
+        fields = ['id', 'username', 'avatar', 'is_online', 'last_seen']
+
+    def get_avatar(self, obj):
+        try:
+            if hasattr(obj, 'profile') and obj.profile.avatar:
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(obj.profile.avatar.url)
+                return obj.profile.avatar.url
+        except Exception:
+            pass
+        return None
+
+    def get_is_online(self, obj):
+        # Sécurité : renvoie False si le profil n'existe pas
+        return getattr(obj.profile, 'is_online', False) if hasattr(obj, 'profile') else False
+
+    def get_last_seen(self, obj):
+        return getattr(obj.profile, 'last_seen', None) if hasattr(obj, 'profile') else None
+    
+
+    
+class UserProfileSerializer(serializers.ModelSerializer):
+    # On va chercher les champs du modèle Profile via la relation 'profile'
+    avatar = serializers.ImageField(source='profile.avatar', read_only=True)
+    is_online = serializers.BooleanField(source='profile.is_online', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'avatar', 'is_online']
 
     def get_avatar(self, obj):
         try:

@@ -15,10 +15,13 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.db.models import Count
 from .serializers import UserSerializer
-
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.core.exceptions import PermissionDenied
+from rest_framework.decorators import api_view, permission_classes
+from .serializers import UserProfileSerializer
+from django.shortcuts import get_object_or_404
+
 
 
 from .import models
@@ -181,3 +184,14 @@ def upload_avatar(request):
         return Response({"error": "Aucun fichier fourni"}, status=400)
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+    
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def contact_detail(request, pk):
+    # On récupère l'utilisateur
+    user = get_object_or_404(User, pk=pk)
+    # Le serializer s'occupe de joindre les infos de Profile automatiquement
+    serializer = UserProfileSerializer(user, context={'request': request})
+    return Response(serializer.data)
