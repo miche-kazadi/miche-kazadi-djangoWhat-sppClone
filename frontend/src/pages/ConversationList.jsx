@@ -40,6 +40,19 @@ export default function ConversationList() {
     setView('profile');
   };
 
+  const startConversation = async (userId) => {
+    try {
+      // On appelle ta route Django : path('conversations/start/')
+      const response = await api.post('conversations/start/', { user_id: userId });
+
+      // Une fois la conversation créée (id reçu), on redirige vers le chat
+      navigate(`/chat/${response.data.id}`);
+    } catch (err) {
+      console.error("Erreur lors de la création de la conversation", err);
+      alert("Impossible de démarrer la discussion.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: "80vh" }}>
@@ -53,23 +66,18 @@ export default function ConversationList() {
   return (
     <div className="container-fluid mt-4">
       <div className="row justify-content-center">
-
         {/* COLONNE GAUCHE : Liste des contacts */}
         <div className="col-md-3 border-end">
           <h5 className="fw-bold mb-3">Contacts</h5>
           <div className="shadow-sm p-2 bg-light rounded" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-            {/* AJOUT ICI : On passe enfin la fonction au composant enfant */}
             <UsersList onContactClick={handleContactClick} />
           </div>
         </div>
 
         {/* COLONNE DROITE : Zone dynamique */}
         <div className="col-md-7">
-
-          {/* AJOUT ICI : On vérifie si on doit afficher les messages OU le profil */}
           {view === 'messages' ? (
             <>
-              {/* TOUT TON CODE EXISTANT POUR LES MESSAGES */}
               <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-white shadow-sm rounded border">
                 <div>
                   <h3 className="fw-bold mb-0">Messages</h3>
@@ -93,10 +101,27 @@ export default function ConversationList() {
                       onClick={() => navigate(`/chat/${conv.id}`)}
                       className="list-group-item list-group-item-action d-flex align-items-center py-3 px-3 border-start-0 border-end-0"
                     >
-                      {/* ... ton design d'avatar et texte ... */}
+                      {/* --- DEBUT DU BLOC AVATAR AJOUTÉ --- */}
+                      {conv.other_user?.avatar ? (
+                        <img
+                          src={conv.other_user.avatar}
+                          alt={conv.other_user.username}
+                          className="rounded-circle shadow-sm"
+                          style={{ width: "45px", height: "45px", objectFit: "cover" }}
+                        />
+                      ) : (
+                        <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow-sm"
+                          style={{ width: "45px", height: "45px", fontWeight: "bold", fontSize: "1.2rem" }}>
+                          {conv.other_user?.username?.charAt(0).toUpperCase() || "?"}
+                        </div>
+                      )}
+                      {/* --- FIN DU BLOC AVATAR --- */}
+
                       <div className="ms-3 flex-grow-1 overflow-hidden text-start">
                         <h6 className="mb-0 fw-bold">{conv.other_user?.username || "Inconnu"}</h6>
-                        <div className="text-muted text-truncate small">{conv.last_message ? conv.last_message.content : "Démarrer..."}</div>
+                        <div className="text-muted text-truncate small">
+                          {conv.last_message ? conv.last_message.content : "Cliquez pour envoyer un message"}
+                        </div>
                       </div>
                     </button>
                   ))
@@ -104,16 +129,15 @@ export default function ConversationList() {
               </div>
             </>
           ) : (
-            /* AJOUT ICI : Si view n'est pas 'messages', on montre ProfileView */
             <div className="bg-white shadow-sm rounded border p-4">
               <ProfileView
                 user={selectedUser}
                 onBack={() => setView('messages')}
+                onStartChat={() => startConversation(selectedUser.id)}
               />
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

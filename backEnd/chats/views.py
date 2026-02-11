@@ -124,29 +124,24 @@ def login_view(request):
         return Response({"error": "Identifiants invalides"}, status=status.HTTP_400_BAD_REQUEST) 
 
 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def users_list(request):
     users = User.objects.exclude(id=request.user.id)
-    data = [
-        {
-            "id": user.id,
-            "username": user.username
-        }
-        for user in users
-    ]
-    return Response(data)
-
+    # Utilise impérativement le Serializer pour inclure l'avatar !
+    serializer = UserSerializer(users, many=True, context={'request': request})
+    return Response(serializer.data)
 
 @receiver(post_save, sender=User)
 def handle_user_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        # get_or_create vérifie l'existence avant de tenter la création
+        Profile.objects.get_or_create(user=instance)
     else:
-        if hasattr(instance, 'profile'):
-            instance.profile.save()
-
+        # Utilisation de getattr pour éviter les erreurs si le profil manque
+        profile = getattr(instance, 'profile', None)
+        if profile:
+            profile.save()
 
 
 
@@ -195,3 +190,12 @@ def contact_detail(request, pk):
     # Le serializer s'occupe de joindre les infos de Profile automatiquement
     serializer = UserProfileSerializer(user, context={'request': request})
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_my_profile(request):
+    # Le contexte est crucial pour générer l'URL de l'image http://127.0.0.1:8000/...
+    serializer = UserSerializer(request.user, context={'request': request})
+    return Response(serializer.data)
+

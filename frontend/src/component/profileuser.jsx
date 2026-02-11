@@ -44,4 +44,3 @@ const ProfileView = ({ user, onBack }) => {
   );
 };
 
-export default ProfileView;

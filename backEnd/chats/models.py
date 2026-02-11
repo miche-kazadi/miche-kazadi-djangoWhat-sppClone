@@ -1,6 +1,7 @@
 
 # Create your models here.
 
+from django.dispatch import receiver
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -9,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 
 # --- 1. MODÈLE PROFIL ---
 class Profile(models.Model): 
@@ -45,8 +47,16 @@ class Message(models.Model):
         return f"{self.sender.username}: {self.content[:20]}"
 
 
+
+# Assure-toi qu'il n'y a pas d'espaces avant "@receiver"
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        # get_or_create évite de recréer si l'admin l'a déjà fait
+        Profile.objects.get_or_create(user=instance)
 
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    # On vérifie si le profil existe avant de sauvegarder
+    if hasattr(instance, 'profile'):
+        instance.profile.save()

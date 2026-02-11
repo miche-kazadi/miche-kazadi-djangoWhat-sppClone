@@ -9,12 +9,18 @@ router.register(r'conversations', views.ConversationViewSet, basename='conversat
 urlpatterns = [
     # 1. Routes spécifiques (toujours au pluriel pour la cohérence)
     path('conversations/start/', views.start_conversation, name='start-conv'),
+
     path('users/', views.users_list, name='users-list'),
+
     path('message/login/', views.login_view, name='login'),
+
     path('profile/upload/', views.upload_avatar, name='upload-avatar'),
-    path('conversations/<int:conversation_id>/messages/', 
-         views.MessageCreateView.as_view(), 
-         name='conversation-messages'),
+
+    path('conversations/<int:conversation_id>/messages/', views.MessageCreateView.as_view(), name='conversation-messages'),
+
     path('contacts/<int:pk>/', views.contact_detail, name='contact-detail'),
+
+    path('users/me/', views.get_my_profile, name='my-profile'),
+    
     path('', include(router.urls)),
 ]
