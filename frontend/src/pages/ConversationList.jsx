@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import api from '../api/axios';
 import UsersList from "../component/usersList";
-// Remplace l'ancienne ligne par celle-ci :
 import ProfileView from "../component/ProfileView";
 
 
@@ -12,7 +11,6 @@ export default function ConversationList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // AJOUT ICI : Les deux états pour gérer la vue et l'utilisateur choisi
   const [view, setView] = useState('messages');
   const [selectedUser, setSelectedUser] = useState(null);
 
@@ -34,7 +32,6 @@ export default function ConversationList() {
     fetchConversations();
   }, []);
 
-  // AJOUT ICI : La fonction qui reçoit l'utilisateur cliqué
   const handleContactClick = (user) => {
     setSelectedUser(user);
     setView('profile');
@@ -42,10 +39,8 @@ export default function ConversationList() {
 
   const startConversation = async (userId) => {
     try {
-      // On appelle ta route Django : path('conversations/start/')
       const response = await api.post('conversations/start/', { user_id: userId });
 
-      // Une fois la conversation créée (id reçu), on redirige vers le chat
       navigate(`/chat/${response.data.id}`);
     } catch (err) {
       console.error("Erreur lors de la création de la conversation", err);
@@ -66,11 +61,13 @@ export default function ConversationList() {
   return (
     <div className="container-fluid mt-4">
       <div className="row justify-content-center">
+
         {/* COLONNE GAUCHE : Liste des contacts */}
+
         <div className="col-md-3 border-end">
           <h5 className="fw-bold mb-3">Contacts</h5>
           <div className="shadow-sm p-2 bg-light rounded" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-            <UsersList onContactClick={handleContactClick} />
+            <UsersList onContactClick={handleContactClick}/>
           </div>
         </div>
 

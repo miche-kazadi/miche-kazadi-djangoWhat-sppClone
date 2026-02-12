@@ -21,10 +21,9 @@ from django.core.exceptions import PermissionDenied
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import UserProfileSerializer
 from django.shortcuts import get_object_or_404
-
-
-
 from .import models
+
+
 
 class ConversationViewSet(viewsets.ModelViewSet):
     serializer_class = ConversationSerializer

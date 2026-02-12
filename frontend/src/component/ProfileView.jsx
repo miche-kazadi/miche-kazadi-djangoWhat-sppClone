@@ -1,6 +1,5 @@
 import React from 'react';
 
-// 1. On ajoute onStartChat dans les props pour recevoir la fonction
 export default function ProfileView({ user, onBack, onStartChat }) {
   if (!user) return null;
 
@@ -11,7 +10,6 @@ export default function ProfileView({ user, onBack, onStartChat }) {
       </button>
 
       <div className="mt-3">
-        {/* 2. On affiche l'image si elle existe, sinon la lettre */}
         {user.avatar ? (
           <img
             src={user.avatar}
@@ -31,7 +29,6 @@ export default function ProfileView({ user, onBack, onStartChat }) {
 
         <hr />
 
-        {/* 3. LE BOUTON MANQUANT EST ICI */}
         <button
           className="btn btn-primary w-5 rounded-pill py-2 shadow-sm mt-3"
           onClick={onStartChat}

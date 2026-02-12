@@ -29,7 +29,6 @@ class UserSerializer(serializers.ModelSerializer):
     
 
     def get_is_online(self, obj):
-        # Sécurité : renvoie False si le profil n'existe pas
         return getattr(obj.profile, 'is_online', False) if hasattr(obj, 'profile') else False
 
     def get_last_seen(self, obj):
@@ -39,15 +38,13 @@ class UserSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     is_mine = serializers.SerializerMethodField()
     sender_username = serializers.ReadOnlyField(source='sender.username')
-    
-    # AJOUTE CETTE LIGNE : pour que le serializer accepte l'ID du destinataire
     receiver_id = serializers.IntegerField(write_only=True, required=False)
+
 
     class Meta:
         model = Message
         fields = ['id', 'conversation', 'sender', 'sender_username', 'content', 'timestamp', 'is_mine', 'receiver_id']
         read_only_fields = ['sender']
-        # AJOUTE CECI : pour que 'conversation' ne bloque plus la requête POST
         extra_kwargs = {
             'conversation': {'required': False, 'allow_null': True}
         }
@@ -83,17 +80,16 @@ class ConversationSerializer(serializers.ModelSerializer):
     def get_last_message(self, obj):
         last_msg = obj.messages.all().order_by('-timestamp').first()
         if  last_msg:
-            # On passe le contexte pour que is_mine fonctionne aussi dans la liste
             return MessageSerializer(last_msg, context=self.context).data
         
         return None 
+    
+
     
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['avatar', 'is_online', 'last_seen']
-
-
 
 
     

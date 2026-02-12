@@ -7,12 +7,10 @@ export default function Profile() {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Charger les données au montage du composant
   useEffect(() => {
     api.get('users/me/') 
       .then(res => {
         setUserData(res.data);
-        // Si l'utilisateur a déjà un avatar en base de données
         if (res.data.avatar) {
           setPreview(res.data.avatar);
         }
@@ -28,7 +26,6 @@ export default function Profile() {
     const file = e.target.files[0];
     if (file) {
       setSelectedFile(file);
-      // URL temporaire pour voir l'image avant de cliquer sur sauvegarder
       setPreview(URL.createObjectURL(file)); 
     }
   };
@@ -44,7 +41,7 @@ export default function Profile() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       
-      alert("Photo de profil mise à jour avec succès !");
+      console.log("Photo de profil mise à jour avec succès !");
       setUserData(response.data);
       setPreview(response.data.avatar); 
       setSelectedFile(null); 

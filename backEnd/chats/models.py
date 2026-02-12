@@ -59,4 +59,4 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     # On vérifie si le profil existe avant de sauvegarder
     if hasattr(instance, 'profile'):
-        instance.profile.save()
+        instance.profile.save() 
