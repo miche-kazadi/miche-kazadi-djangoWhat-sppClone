@@ -18,13 +18,16 @@ class Profile(models.Model):
         User, 
         on_delete=models.CASCADE, 
         related_name='profile'
-    )
+        )
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     is_online = models.BooleanField(default=False)
-    last_seen = models.DateTimeField(null=True, blank=True)
+    last_seen = models.DateTimeField(null=True, blank=True) 
 
     def __str__(self):
         return f"Profile of {self.user.username}"
+
+
+
 
 # --- 2. MODÈLES DE CHAT ---
 class Conversation(models.Model):
@@ -33,6 +36,9 @@ class Conversation(models.Model):
 
     def __str__(self):
         return f"Conversations {self.id} between {', '.join([u.username for u in self.participants.all()])}"
+
+
+# --- 2. MODÈLES DE Message ---
 
 class Message(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
@@ -48,15 +54,12 @@ class Message(models.Model):
 
 
 
-# Assure-toi qu'il n'y a pas d'espaces avant "@receiver"
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        # get_or_create évite de recréer si l'admin l'a déjà fait
         Profile.objects.get_or_create(user=instance)
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
-    # On vérifie si le profil existe avant de sauvegarder
     if hasattr(instance, 'profile'):
         instance.profile.save() 

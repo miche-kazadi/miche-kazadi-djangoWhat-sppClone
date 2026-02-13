@@ -25,7 +25,7 @@ export default function ProfileView({ user, onBack, onStartChat }) {
         )}
 
         <h2 className="mt-3 fw-bold">{user.username}</h2>
-        <p className="text-muted">{user.email || "Pas d'email renseigné"}</p>
+        <p className="text-muted">{user.email|| "Pas d'email renseigné"}</p>
 
         <hr />
 
