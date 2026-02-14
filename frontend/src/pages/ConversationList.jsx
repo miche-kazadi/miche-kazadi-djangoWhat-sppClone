@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import api from '../api/axios';
 import UsersList from "../component/usersList";
 import ProfileView from "../component/ProfileView";
-
-
+// --- 1. IMPORTATION DE LA BARRE DE STORIES ---
+import StoriesBar from "../component/StoriesBar";
 
 export default function ConversationList() {
   const [conversations, setConversations] = useState([]);
@@ -40,7 +40,6 @@ export default function ConversationList() {
   const startConversation = async (userId) => {
     try {
       const response = await api.post('conversations/start/', { user_id: userId });
-
       navigate(`/chat/${response.data.id}`);
     } catch (err) {
       console.error("Erreur lors de la création de la conversation", err);
@@ -63,11 +62,10 @@ export default function ConversationList() {
       <div className="row justify-content-center">
 
         {/* COLONNE GAUCHE : Liste des contacts */}
-
         <div className="col-md-3 border-end">
           <h5 className="fw-bold mb-3">Contacts</h5>
           <div className="shadow-sm p-2 bg-light rounded" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-            <UsersList onContactClick={handleContactClick}/>
+            <UsersList onContactClick={handleContactClick} />
           </div>
         </div>
 
@@ -75,6 +73,9 @@ export default function ConversationList() {
         <div className="col-md-7">
           {view === 'messages' ? (
             <>
+              {/* --- 2. AJOUT DE LA BARRE DE STORIES ICI --- */}
+              <StoriesBar />
+
               <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-white shadow-sm rounded border">
                 <div>
                   <h3 className="fw-bold mb-0">Messages</h3>
@@ -98,7 +99,6 @@ export default function ConversationList() {
                       onClick={() => navigate(`/chat/${conv.id}`)}
                       className="list-group-item list-group-item-action d-flex align-items-center py-3 px-3 border-start-0 border-end-0"
                     >
-                      {/* --- DEBUT DU BLOC AVATAR AJOUTÉ --- */}
                       {conv.other_user?.avatar ? (
                         <img
                           src={conv.other_user.avatar}
@@ -112,7 +112,6 @@ export default function ConversationList() {
                           {conv.other_user?.username?.charAt(0).toUpperCase() || "?"}
                         </div>
                       )}
-                      {/* --- FIN DU BLOC AVATAR --- */}
 
                       <div className="ms-3 flex-grow-1 overflow-hidden text-start">
                         <h6 className="mb-0 fw-bold">{conv.other_user?.username || "Inconnu"}</h6>

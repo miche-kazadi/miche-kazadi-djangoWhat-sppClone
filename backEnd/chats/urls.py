@@ -21,6 +21,7 @@ urlpatterns = [
     path('contacts/<int:pk>/', views.contact_detail, name='contact-detail'),
 
     path('users/me/', views.get_my_profile, name='my-profile'),
+    path('stories/', views.story_list_create, name='stories'),
     
     path('', include(router.urls)),
 ]

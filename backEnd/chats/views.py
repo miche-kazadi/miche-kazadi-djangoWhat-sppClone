@@ -1,3 +1,6 @@
+from django.utils import timezone
+from .serializers import StorySerializer
+from datetime import timedelta 
 from django.contrib.auth import authenticate, login
 from rest_framework.decorators import api_view, permission_classes 
 from .models import Conversation, Message, Profile
@@ -21,7 +24,9 @@ from django.core.exceptions import PermissionDenied
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import UserProfileSerializer
 from django.shortcuts import get_object_or_404
-from .import models
+from .models import Story
+from collections import defaultdict
+
 
 
 
@@ -198,3 +203,34 @@ def get_my_profile(request):
     serializer = UserSerializer(request.user, context={'request': request})
     return Response(serializer.data)
 
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def story_list_create(request):
+    if request.method == 'POST':
+        if 'image' not in request.FILES:
+            return Response({"error": "Image manquante"}, status=400)
+        story = Story.objects.create(user=request.user, image=request.FILES['image'])
+        return Response(StorySerializer(story, context={'request': request}).data, status=201)
+
+    # Récupérer les stories des dernières 24h
+    time_threshold = timezone.now() - timedelta(hours=24)
+    stories = Story.objects.filter(created_at__gte=time_threshold).order_by('-created_at')
+    
+    # --- LOGIQUE DE GROUPEMENT ---
+    grouped_stories = defaultdict(list)
+    for story in stories:
+        data = StorySerializer(story, context={'request': request}).data
+        grouped_stories[story.user.username].append(data)
+
+    # On transforme le dictionnaire en une liste propre pour le frontend
+    result = []
+    for username, user_stories in grouped_stories.items():
+        result.append({
+            "username": username,
+            "user_avatar": user_stories[0]['user_avatar'], # On prend l'avatar de la 1ère story
+            "stories": user_stories # Contient la liste de toutes ses photos
+        })
+        
+    return Response(result)
