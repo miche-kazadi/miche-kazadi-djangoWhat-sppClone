@@ -1,19 +1,12 @@
-
-# Create your models here.
-
-from django.dispatch import receiver
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from datetime import timedelta
-
-
 
 # --- 1. MODÈLE PROFIL ---
 class Profile(models.Model): 

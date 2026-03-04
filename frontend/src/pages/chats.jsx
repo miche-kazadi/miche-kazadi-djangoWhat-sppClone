@@ -84,14 +84,18 @@ export default function Chat() {
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
+
     try {
-      await api.post(`conversations/${id}/messages/`, { content: newMessage });
-      setNewMessage("");
+      // L'ID vient de useParams() en haut de ton composant
+      await api.post(`conversations/${id}/messages/`, {
+        content: newMessage
+      });
+      setNewMessage(""); // Vide le champ après envoi
     } catch (err) {
-      console.error("Erreur envoi:", err.response?.data);
+      console.error("Erreur envoi message:", err.response?.data);
+      alert("Erreur lors de l'envoi : " + JSON.stringify(err.response?.data));
     }
   };
-
   if (loading) return <div className="container mt-4 text-center">Chargement...</div>;
 
   const otherUser = conversation?.other_user;
@@ -136,8 +140,8 @@ export default function Chat() {
               <div className={`p-2 rounded shadow-sm ${msg.is_mine ? 'bg-primary text-white' : 'bg-white text-dark border'}`} style={{ maxWidth: "70%", minWidth: "100px" }}>
                 {!msg.is_mine && <small className="d-block fw-bold text-muted" style={{ fontSize: "0.7rem" }}>{msg.sender_username}</small>}
                 <div style={{ wordBreak: "break-word" }}>{msg.content}</div>
-                <small className={`d-block text-end mt-1 ${msg.is_mine ? 'text-white-50' : 'text-muted'}`} style={{ fontSize: "0.6rem" }}>
-                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <small className={`d-block text-end mt-1   ${msg.is_mine ? 'text-white-50' : 'text-muted'}`} style={{ fontSize: "0.6rem" }}>
+                  {new Date(msg.timestamp).toLocaleTimeString([], { year: '2-digit', month : 'long',  day : 'numeric'}, {hour: '2-digit', minute: '2-digit' })}
                 </small>
               </div>
             </div>

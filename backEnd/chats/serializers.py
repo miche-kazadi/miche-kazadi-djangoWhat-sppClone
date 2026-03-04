@@ -36,12 +36,15 @@ class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = ['id', 'conversation', 'sender', 'sender_username', 'content', 'timestamp', 'is_mine', 'receiver_id']
-        read_only_fields = ['sender']
+        read_only_fields = ['sender', 'conversation']
 
     def get_is_mine(self, obj):
         request = self.context.get('request')
-        return obj.sender == request.user if request else False
-
+        if request and hasattr(request, 'user'):
+            return obj.sender == request.user
+        return False
+    
+    
 class ConversationSerializer(serializers.ModelSerializer):
     last_message = serializers.SerializerMethodField()
     other_user = serializers.SerializerMethodField()
@@ -58,7 +61,6 @@ class ConversationSerializer(serializers.ModelSerializer):
                 return UserSerializer(other_user, context={'request': request}).data
         return None
 
-    # --- LA MÉTHODE DOIT ÊTRE ICI ---
     def get_last_message(self, obj):
         last_msg = obj.messages.all().order_by('-timestamp').first()
         if last_msg:

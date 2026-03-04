@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 
-// AJOUT DE LA PROP onContactClick ICI
 export default function UsersList({ onContactClick }) {
   const [loadingId, setLoadingId] = useState(null);
   const [users, setUsers] = useState([]);
