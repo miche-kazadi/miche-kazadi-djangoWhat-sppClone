@@ -39,9 +39,9 @@ class Conversation(models.Model):
 class Message(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
-    content = models.TextField()
+    content = models.TextField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-
+    image = models.ImageField(upload_to='message_images/', null=True, blank=True)
     class Meta:
         ordering = ['timestamp']
 

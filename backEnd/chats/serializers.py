@@ -35,7 +35,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ['id', 'conversation', 'sender', 'sender_username', 'content', 'timestamp', 'is_mine', 'receiver_id']
+        fields = ['id', 'conversation', 'sender', 'sender_username', 'content', 'timestamp', 'is_mine', 'receiver_id', 'image']
         read_only_fields = ['sender', 'conversation']
 
     def get_is_mine(self, obj):

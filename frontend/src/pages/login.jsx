@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 
 export default function Login() {
@@ -62,6 +62,14 @@ export default function Login() {
               onChange={handleChange}
               required
             />
+            <div className="text-center mt-3">
+              <p>
+                Pas encore de compte ?
+                <Link to="/register" style={{ marginLeft: '5px', textDecoration: 'none', fontWeight: 'bold' }}>
+                  Créez un compte ici
+                </Link>
+              </p>
+            </div>
             <button disabled={loading} type="submit" className="btn btn-primary w-100">
               {loading ? "Connexion..." : "Se connecter"}
             </button>

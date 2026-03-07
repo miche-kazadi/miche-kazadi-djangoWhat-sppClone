@@ -8,6 +8,8 @@ export default function Chat() {
   const [conversation, setConversation] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  // Correction ici : Nom unique "selectedImage"
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const scrollRef = useRef(null);
   const socketRef = useRef(null);
@@ -38,11 +40,9 @@ export default function Chat() {
 
     socket.onopen = () => console.log("WebSocket connecté avec succès !");
 
-    // FUSION DES DEUX LOGIQUES ONMESSAGE
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
-      // 1. GESTION DU STATUT (ONLINE/OFFLINE)
       if (data.type === 'user_status') {
         setConversation(prev => {
           if (prev && prev.other_user.id === data.user_id) {
@@ -56,7 +56,6 @@ export default function Chat() {
         return;
       }
 
-      // 2. GESTION DES MESSAGES
       const receivedMessage = data.message || data;
       const currentUser = localStorage.getItem('username');
       receivedMessage.is_mine = String(receivedMessage.sender_username) === String(currentUser);
@@ -83,20 +82,35 @@ export default function Chat() {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+
+    // Correction de la condition avec le bon nom de variable
+    if (!newMessage.trim() && !selectedImage) return;
 
     try {
-      // L'ID vient de useParams() en haut de ton composant
-      await api.post(`conversations/${id}/messages/`, {
-        content: newMessage
+      const formData = new FormData();
+      formData.append("content", newMessage);
+
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
+
+      await api.post(`conversations/${id}/messages/`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
       });
-      setNewMessage(""); // Vide le champ après envoi
+
+      setNewMessage("");
+      setSelectedImage(null);
+
     } catch (err) {
-      console.error("Erreur envoi message:", err.response?.data);
-      alert("Erreur lors de l'envoi : " + JSON.stringify(err.response?.data));
+      console.error("Erreur envoi message:", err);
+      // Alerte plus précise pour le débug
+      alert("Erreur : " + (err.response?.data?.detail || "Vérifiez votre connexion au serveur"));
     }
   };
-  if (loading) return <div className="container mt-4 text-center">Chargement...</div>;
+
+  if (loading) {
+    return <div className="container mt-4 text-center">Chargement...</div>;
+  }
 
   const otherUser = conversation?.other_user;
 
@@ -135,14 +149,44 @@ export default function Chat() {
         {messages.length === 0 ? (
           <p className="text-center text-muted my-auto">Aucun message ici.</p>
         ) : (
-          messages.map(msg => (
-            <div key={msg.id || Math.random()} className={`mb-2 d-flex ${msg.is_mine ? 'justify-content-end' : 'justify-content-start'}`}>
+          messages.map((msg, index) => (
+            <div key={msg.id || index} className={`mb-2 d-flex ${msg.is_mine ? 'justify-content-end' : 'justify-content-start'}`}>
               <div className={`p-2 rounded shadow-sm ${msg.is_mine ? 'bg-primary text-white' : 'bg-white text-dark border'}`} style={{ maxWidth: "70%", minWidth: "100px" }}>
-                {!msg.is_mine && <small className="d-block fw-bold text-muted" style={{ fontSize: "0.7rem" }}>{msg.sender_username}</small>}
-                <div style={{ wordBreak: "break-word" }}>{msg.content}</div>
-                <small className={`d-block text-end mt-1   ${msg.is_mine ? 'text-white-50' : 'text-muted'}`} style={{ fontSize: "0.6rem" }}>
-                  {new Date(msg.timestamp).toLocaleTimeString([], { year: '2-digit', month : 'long',  day : 'numeric'}, {hour: '2-digit', minute: '2-digit' })}
+
+                {!msg.is_mine && (
+                  <small className="d-block fw-bold text-muted" style={{ fontSize: "0.7rem" }}>
+                    {msg.sender_username}
+                  </small>
+                )}
+
+                {msg.content && (
+                  <div style={{ wordBreak: "break-word" }}>
+                    {msg.content}
+                  </div>
+                )}
+
+                {msg.image && (
+                  <img
+                    src={msg.image.startsWith('http') ? msg.image : `http://127.0.0.1:8000${msg.image}`}
+                    alt="message"
+                    style={{
+                      maxWidth: "200px",
+                      borderRadius: "10px",
+                      marginTop: "5px"
+                    }}
+                  />
+                )}
+
+                <small
+                  className={`d-block text-end mt-1 ${msg.is_mine ? 'text-white-50' : 'text-muted'}`}
+                  style={{ fontSize: "0.6rem" }}
+                >
+                  {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  }) : ''}
                 </small>
+
               </div>
             </div>
           ))
@@ -158,6 +202,14 @@ export default function Chat() {
           value={newMessage}
           onChange={e => setNewMessage(e.target.value)}
         />
+        <input
+          type="file"
+          className="form-control border-0 shadow-none"
+          accept="image/*"
+          style={{ maxWidth: '200px' }}
+          onChange={e => setSelectedImage(e.target.files[0])}
+        />
+
         <button type="submit" className="btn btn-primary px-4 rounded-pill">Envoyer</button>
       </form>
     </div>

@@ -1,32 +1,76 @@
 from django.utils import timezone
-from .serializers import StorySerializer
-from datetime import timedelta 
-from django.contrib.auth import authenticate, login
-from rest_framework.decorators import api_view, permission_classes 
-from .models import Conversation, Message, Profile
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from rest_framework.permissions import AllowAny
-from rest_framework.authtoken.models import Token 
-from rest_framework import generics, viewsets, status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
-from .serializers import ConversationSerializer, MessageSerializer
-from django.contrib.auth.models import User
-from django.http import JsonResponse
-from django.db.models import Count
-from .serializers import UserSerializer
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-from django.core.exceptions import PermissionDenied
-from rest_framework.decorators import api_view, permission_classes
-from .serializers import UserProfileSerializer
-from django.shortcuts import get_object_or_404
-from .models import Story
+from datetime import timedelta
 from collections import defaultdict
 
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db import transaction
+
+from rest_framework import generics, viewsets, status
+from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+from rest_framework.parsers import MultiPartParser, FormParser
+
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+from .models import Conversation, Message, Profile, Story
+from .serializers import (
+    ConversationSerializer, MessageSerializer, 
+    UserSerializer, UserProfileSerializer, StorySerializer
+)
+
+# --- 1. AUTHENTIFICATION (LOGIN & REGISTER) ---
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_user(request):
+    """Permet aux utilisateurs de créer leur propre compte"""
+    username = request.data.get('username')
+    password = request.data.get('password')
+    email = request.data.get('email', '')
+
+    if not username or not password:
+        return Response({'error': 'Nom d\'utilisateur et mot de passe requis'}, status=400)
+
+    if User.objects.filter(username=username).exists():
+        return Response({'error': 'Ce nom d\'utilisateur est déjà pris'}, status=400)
+
+    try:
+        with transaction.atomic():
+            # Création de l'utilisateur
+            user = User.objects.create_user(username=username, password=password, email=email)
+            # Création immédiate du token pour le connecter après l'inscription
+            token, _ = Token.objects.get_or_create(user=user)
+            
+        return Response({
+            "token": token.key,
+            "username": user.username,
+            "message": "Compte créé avec succès !"
+        }, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_view(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+    user = authenticate(username=username, password=password)
+    if user:
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({
+            "token": token.key,
+            "username": user.username
+        }, status=status.HTTP_200_OK)
+    return Response({"error": "Identifiants invalides"}, status=status.HTTP_401_UNAUTHORIZED)
+
+# --- 2. MESSAGERIE & CONVERSATIONS ---
 
 class ConversationViewSet(viewsets.ModelViewSet):
     serializer_class = ConversationSerializer
@@ -37,46 +81,40 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def message(self, request, pk=None):
-        """
-        """
         try:
-            conversation = Conversation.objects.get(pk=pk)
-            message = conversation.message.select_related('sender__profile').order_by('timestamp')
-            
-            serializer = MessageSerializer(message, many=True, context={'request': request})
+            conversation = self.get_object()
+            # Optimisation : select_related pour charger le profil de l'envoyeur en une seule fois
+            messages = conversation.messages.select_related('sender__profile').order_by('timestamp')
+            serializer = MessageSerializer(messages, many=True, context={'request': request})
             return Response(serializer.data)
-        except Conversation.DoesNotExist:
-            return Response({"error": "Conversations introuvable"}, status=404)
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['request'] = self.request
-        conversation_id = self.request.data.get('conversation')
-        context['conversation_id'] = conversation_id
-        return context
+        except Exception:
+            return Response({"error": "Conversation introuvable"}, status=404)
 
 class MessageCreateView(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
-        # On récupère l'ID depuis l'URL (ex: /api/conversations/22/messages/)
         conversation_id = self.kwargs.get('conversation_id')
         return Message.objects.filter(
             conversation_id=conversation_id,
             conversation__participants=self.request.user
-        ).order_by('timestamp')
+        ).select_related('sender__profile').order_by('timestamp')
 
     def perform_create(self, serializer):
         conversation_id = self.kwargs.get('conversation_id')
         conversation = get_object_or_404(Conversation, id=conversation_id, participants=self.request.user)
         message = serializer.save(sender=self.request.user, conversation=conversation)
+        
+        # Envoi en temps réel via WebSocket
         channel_layer = get_channel_layer()
         message_data = {
             'id': message.id,
             'content': message.content,
             'sender_username': self.request.user.username,
             'timestamp': message.timestamp.isoformat(),
+            'image': message.image.url if message.image else None,
             'is_mine': False,
             'conversation': conversation.id
         }
@@ -90,61 +128,42 @@ class MessageCreateView(generics.ListCreateAPIView):
         )
 
 @api_view(['POST'])
-def login_view(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    user = authenticate(username=username, password=password)
-    if user:
-        token, created  = Token.objects.get_or_create(user=user)
-        return Response({
-            "token": token.key,
-            "username": user.username
-        }, status=status.HTTP_200_OK)
-    else:
-        return Response({"error": "Identifiants invalides"}, status=status.HTTP_400_BAD_REQUEST) 
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def users_list(request):
-    users = User.objects.exclude(id=request.user.id)
-    serializer = UserSerializer(users, many=True, context={'request': request})
-    return Response(serializer.data)
-
-@receiver(post_save, sender=User)
-def handle_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.get_or_create(user=instance)
-    else:
-        profile = getattr(instance, 'profile', None)
-        if profile:
-            profile.save()
-
-@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def start_conversation(request):
     user_id = request.data.get('user_id')
-    other_user = User.objects.get(id=user_id)
+    other_user = get_object_or_404(User, id=user_id)
     conversation = Conversation.objects.filter(participants=request.user).filter(participants=other_user).first()
     if not conversation:
         conversation = Conversation.objects.create()
         conversation.participants.add(request.user, other_user)
-
     return Response({"id": conversation.id})
+
+# --- 3. PROFILS & UTILISATEURS ---
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def users_list(request):
+    # Optimisation : On charge les profils pour éviter les requêtes N+1
+    users = User.objects.exclude(id=request.user.id).select_related('profile')
+    serializer = UserSerializer(users, many=True, context={'request': request})
+    return Response(serializer.data)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def upload_avatar(request):
-    try:
-        profile, created = Profile.objects.get_or_create(user=request.user)
-        if 'avatar' in request.FILES:
-            profile.avatar = request.FILES['avatar']
-            profile.save()
-            serializer = UserSerializer(request.user, context={'request': request})
-            return Response(serializer.data)
-            
-        return Response({"error": "Aucun fichier fourni"}, status=400)
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
+    profile = request.user.profile # Le signal handle_user_profile garantit l'existence du profil
+    if 'avatar' in request.FILES:
+        profile.avatar = request.FILES['avatar']
+        profile.save()
+        serializer = UserSerializer(request.user, context={'request': request})
+        return Response(serializer.data)
+    return Response({"error": "Aucun fichier fourni"}, status=400)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_my_profile(request):
+    serializer = UserSerializer(request.user, context={'request': request})
+    return Response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -153,11 +172,7 @@ def contact_detail(request, pk):
     serializer = UserProfileSerializer(user, context={'request': request})
     return Response(serializer.data)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_my_profile(request):
-    serializer = UserSerializer(request.user, context={'request': request})
-    return Response(serializer.data)
+# --- 4. STORIES ---
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -169,18 +184,28 @@ def story_list_create(request):
         return Response(StorySerializer(story, context={'request': request}).data, status=201)
 
     time_threshold = timezone.now() - timedelta(hours=24)
-    stories = Story.objects.filter(created_at__gte=time_threshold).order_by('-created_at')
+    stories = Story.objects.filter(created_at__gte=time_threshold).select_related('user__profile').order_by('-created_at')
+    
     grouped_stories = defaultdict(list)
     for story in stories:
         data = StorySerializer(story, context={'request': request}).data
         grouped_stories[story.user.username].append(data)
 
-    result = []
-    for username, user_stories in grouped_stories.items():
-        result.append({
+    result = [
+        {
             "username": username,
-            "user_avatar": user_stories[0]['user_avatar'], # On prend l'avatar de la 1ère story
-            "stories": user_stories # Contient la liste de toutes ses photos
-        })
-        
+            "user_avatar": user_stories[0]['user_avatar'],
+            "stories": user_stories
+        } for username, user_stories in grouped_stories.items()
+    ]
     return Response(result)
+
+# --- 5. SIGNALS (GESTION AUTO DU PROFIL) ---
+
+@receiver(post_save, sender=User)
+def handle_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.get_or_create(user=instance)
+    else:
+        if hasattr(instance, 'profile'):
+            instance.profile.save()
