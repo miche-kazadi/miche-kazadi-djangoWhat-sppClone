@@ -24,10 +24,13 @@ SECRET_KEY = 'django-insecure-abehpu(5_jgyu-gpvg6@e2lc1loubr*b@xxzdxg%=zxc@nu5^u
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-ALLOWED_HOSTS = []
-
-
+# Dans settings.py
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '0.0.0.0',
+    '192.168.0.100', # Ajoute aussi ton adresse IP locale ici !
+]
 # Application definition
 
 INSTALLED_APPS = [
@@ -50,8 +53,9 @@ INSTALLED_APPS = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",""
-    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "http://192.168.0.100:5173",
+    "capacitor://localhost",
 ]
 
 MIDDLEWARE = [

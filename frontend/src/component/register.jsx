@@ -25,10 +25,9 @@ export default function Register() {
     setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError("   Les mots de passe ne correspondent pas.");
       return;
-    }
-
+    } 
     setLoading(true);
 
     try {

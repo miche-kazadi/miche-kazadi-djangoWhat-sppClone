@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     # C'est ici que tes routes d'API (chats.urls) sont incluses
-    path('api/', include('chats.urls')), 
+    path('', include('chats.urls')), 
 ]
 
 # Cette partie permet d'afficher les photos d'avatar dans ton navigateur
