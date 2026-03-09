@@ -1,0 +1,51 @@
+:root {
+  --bg-main: #111b21;
+  --bg-secondary: #202c33;
+  --text-main: #e9edef;
+  --text-muted: #8696a0;
+  --border-color: #313d45;
+  --whatsapp-green: #00a884;
+}
+
+body {
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
+}
+
+.bg-dark-whatsapp {
+  background-color: var(--bg-secondary) !important;
+}
+
+.text-custom-main {
+  color: var(--text-main) !important;
+}
+
+.text-custom-muted {
+  color: var(--text-muted) !important;
+}
+
+.border-custom {
+  border-color: var(--border-color) !important;
+}
+
+.contact-item {
+  background-color: transparent;
+  border: none;
+  transition: 0.2s;
+  color: #e9edef;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 12px;
+}
+
+.contact-item:hover {
+  background-color: #2a3942;
+  /* Couleur de survol WhatsApp */
+}
+
+.modal-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}

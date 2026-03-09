@@ -9,7 +9,7 @@ export default function UsersList({ onContactClick }) {
   
 
   useEffect(() => {
-    api.get("users/")
+    api.get("contacts/")
       .then(res => setUsers(res.data))
       .catch(err => console.error(err));
   }, []);

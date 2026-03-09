@@ -1,7 +1,6 @@
 from django.utils import timezone
 from datetime import timedelta
 from collections import defaultdict
-
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
@@ -19,7 +18,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
-from .models import Conversation, Message, Profile, Story
+from .models import Conversation, Message, Profile, Story, Contact
 from .serializers import (
     ConversationSerializer, MessageSerializer, 
     UserSerializer, UserProfileSerializer, StorySerializer
@@ -200,6 +199,25 @@ def story_list_create(request):
     ]
     return Response(result)
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_contacts(request):
+    contacts = Contact.objects.filter(user=request.user).select_related('contact__profile')
+
+    data = [
+        {
+            "id": c.contact.id,
+            "username": c.contact.username,
+            "avatar": c.contact.profile.avatar.url if c.contact.profile.avatar else None,
+            "is_online": c.contact.profile.is_online
+        }
+        for c in contacts
+    ]
+
+    return Response(data)
+
+
 # --- 5. SIGNALS (GESTION AUTO DU PROFIL) ---
 
 @receiver(post_save, sender=User)
@@ -209,3 +227,44 @@ def handle_user_profile(sender, instance, created, **kwargs):
     else:
         if hasattr(instance, 'profile'):
             instance.profile.save()
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_contact(request):
+    username = request.data.get("username")
+
+    if not username:
+        return Response({"error": "Username requis"}, status=400)
+
+    try:
+        contact_user = User.objects.get(username=username)
+
+        if contact_user == request.user:
+            return Response({"error": "Impossible de t'ajouter toi-même"}, status=400)
+
+        contact, created = Contact.objects.get_or_create(
+            user=request.user,
+            contact=contact_user
+        )
+
+        if not created:
+            return Response({"message": "Contact déjà ajouté"})
+
+        # Création automatique de conversation
+        conversation = Conversation.objects.filter(
+            participants=request.user
+        ).filter(
+            participants=contact_user
+        ).first()
+
+        if not conversation:
+            conversation = Conversation.objects.create()
+            conversation.participants.add(request.user, contact_user)
+
+        return Response({
+            "message": "Contact ajouté avec succès",
+            "conversation_id": conversation.id
+        })
+
+    except User.DoesNotExist:
+        return Response({"error": "Utilisateur introuvable"}, status=404)

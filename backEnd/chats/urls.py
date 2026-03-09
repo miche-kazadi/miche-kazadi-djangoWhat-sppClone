@@ -15,6 +15,7 @@ urlpatterns = [
     path('users/', views.users_list, name='users-list'),
     path('users/me/', views.get_my_profile, name='my-profile'),
     path('profile/upload/', views.upload_avatar, name='upload-avatar'),
+    path('contacts/', views.users_list, name='all-contacts'),
     path('contacts/<int:pk>/', views.contact_detail, name='contact-detail'),
 
     # Routes de conversation et messages

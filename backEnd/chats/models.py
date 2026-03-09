@@ -62,7 +62,16 @@ class Story(models.Model):
     def __str__(self):
         return f"Story de {self.user.username} - {self.created_at}"
 
+class Contact(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contacts')
+    contact_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contacted_by')
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('user', 'contact_user')
+
+    def __str__(self):
+        return f"{self.user.username} is in contact with {self.contact_user.username}"
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

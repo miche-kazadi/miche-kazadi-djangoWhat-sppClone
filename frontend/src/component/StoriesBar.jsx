@@ -9,6 +9,7 @@ export default function StoriesBar() {
   const [progress, setProgress] = useState(0); // État pour la barre (0 à 100)
   const [seenStories, setSeenStories] = useState([]); // Pour changer la couleur du cercle
 
+
   useEffect(() => {
     fetchStories();
   }, []);
@@ -121,6 +122,7 @@ export default function StoriesBar() {
           );
         })}
       </div>
+  
 
       {/* --- VIEWER AVEC TIMER --- */}
       {selectedGroup && (
