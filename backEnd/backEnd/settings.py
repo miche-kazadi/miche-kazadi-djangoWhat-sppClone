@@ -31,7 +31,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '0.0.0.0',
     '192.168.0.100',
-    'miche-kazadi-djangowhat-sppclone.onrender.com' # Ajoute aussi ton adresse IP locale ici !
+    'miche-kazadi-djangowhat-sppclone.onrender.com', # Ajoute aussi ton adresse IP locale ici !
 ]
 # Application definition
 
