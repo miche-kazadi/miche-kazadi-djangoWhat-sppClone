@@ -26,6 +26,7 @@ SECRET_KEY = 'django-insecure-abehpu(5_jgyu-gpvg6@e2lc1loubr*b@xxzdxg%=zxc@nu5^u
 DEBUG = True
 # Dans settings.py
 ALLOWED_HOSTS = [
+    'miche-kazadi-djangowhat-sppclone-1.onrender.com',
     '127.0.0.1',
     'localhost',
     '0.0.0.0',
