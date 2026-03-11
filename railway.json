@@ -1,0 +1,8 @@
+{
+  "build": {
+    "root": "backEnd"
+  },
+  "deploy": {
+    "startCommand": "gunicorn backEnd.wsgi:application"
+  }
+}

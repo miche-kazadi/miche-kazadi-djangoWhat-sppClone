@@ -59,6 +59,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',  
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Doit être tout en haut pour servir les fichiers statiques efficacement
     'corsheaders.middleware.CorsMiddleware', # Doit être tout en haut !
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -164,7 +166,7 @@ STATIC_URL = 'static/'
 # L'URL pour les fichiers téléchargés par les utilisateurs (que tu as configuré avant)
 import os
 MEDIA_URL = 'media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'staticfiles/media/')
 
 
 # Dis à Django d'utiliser ton fichier asgi.py pour les WebSockets
@@ -182,3 +184,9 @@ CHANNEL_LAYERS = {
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
+
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_URL = 'static/'
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"    
