@@ -55,6 +55,7 @@ INSTALLED_APPS = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
+    "https://django-whatsapp-clone-app.web.app",
     "http://localhost:5173",
     "http://192.168.0.100:5173",
     "capacitor://localhost",

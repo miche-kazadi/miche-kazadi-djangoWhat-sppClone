@@ -5,7 +5,7 @@ const getBaseURL = () => {
     return 'http://127.0.0.1:8000/';
   }
 
-  return 'http://192.168.0.100:8000/';
+  return 'https://miche-kazadi-djangowhat-sppclone-1.onrender.com/'; 
 };
 
 const api = axios.create({
