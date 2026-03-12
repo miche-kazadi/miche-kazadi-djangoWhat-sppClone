@@ -32,9 +32,18 @@ export default function Chat() {
 
   useEffect(() => {
     fetchData();
+    const token = localStorage.getItem("token");
 
-    const token = localStorage.getItem('token');
-    const socketUrl = `ws://127.0.0.1:8000/ws/chat/${id}/?token=${token}`;
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+
+    const host =
+      window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1"
+        ? "127.0.0.1:8000"
+        : "miche-kazadi-djangowhat-sppclone-1.onrender.com";
+
+    const socketUrl = `${protocol}://${host}/ws/chat/${id}/?token=${token}`;
+
     const socket = new WebSocket(socketUrl);
     socketRef.current = socket;
 
@@ -113,6 +122,11 @@ export default function Chat() {
   }
 
   const otherUser = conversation?.other_user;
+  
+  const baseURL =
+    window.location.hostname === "localhost"
+      ? "http://127.0.0.1:8000"
+      : "https://miche-kazadi-djangowhat-sppclone-1.onrender.com";
 
   return (
     <div className="container mt-4">
@@ -167,7 +181,7 @@ export default function Chat() {
 
                 {msg.image && (
                   <img
-                    src={msg.image.startsWith('http') ? msg.image : `http://127.0.0.1:8000${msg.image}`}
+                    src={msg.image.startsWith('http') ? msg.image : `${baseURL}${msg.image}`}
                     alt="message"
                     style={{
                       maxWidth: "200px",
