@@ -23,7 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-abehpu(5_jgyu-gpvg6@e2lc1loubr*b@xxzdxg%=zxc@nu5^u'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
+
+SECRET_KEY = os.environ.get('redis://red-d6p0g67afjfc739ff3lg:6379')
 # Dans settings.py
 ALLOWED_HOSTS = [
     'miche-kazadi-djangowhat-sppclone-1.onrender.com',
@@ -62,17 +64,16 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',  
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Doit être tout en haut pour servir les fichiers statiques efficacement
-    'corsheaders.middleware.CorsMiddleware', # Doit être tout en haut !
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'backEnd.urls'
@@ -180,8 +181,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'staticfiles/media/')
 ASGI_APPLICATION = 'backEnd.asgi.application'
 
 CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [os.environ.get('REDIS_URL')], # Utilise la variable d'env ici
+        },
     },
 }
 
