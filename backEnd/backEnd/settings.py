@@ -21,14 +21,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-abehpu(5_jgyu-gpvg6@e2lc1loubr*b@xxzdxg%=zxc@nu5^u'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 
 # --- Sécurité ---
-SECRET_KEY = os.environ.get('SECRET_KEY', 'une-cle-par-defaut-pour-le-test')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
 # --- Redis ---
 # On ne met pas l'URL en dur, on lit la variable d'environnement
@@ -168,7 +167,6 @@ USE_TZ = True
 
 
 # L'URL utilisée pour accéder aux fichiers statiques (obligatoire)
-STATIC_URL = 'static/'
 
 # Optionnel : Le dossier où Django collectera tous les fichiers statiques pour la production
 # STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -185,14 +183,21 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'staticfiles/media/')
 # À mettre tout à la fin de settings.py
 ASGI_APPLICATION = 'backEnd.asgi.application'
 
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [os.environ.get('REDIS_URL')], # Utilise la variable d'env ici
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [REDIS_URL],
+            },
         },
-    },
-}
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        }
+    }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
