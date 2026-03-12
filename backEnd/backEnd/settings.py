@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-abehpu(5_jgyu-gpvg6@e2lc1loubr*b@xxzdxg%=zxc@nu5^u'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 
 # --- Sécurité ---
@@ -34,14 +34,13 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'une-cle-par-defaut-pour-le-test')
 # On ne met pas l'URL en dur, on lit la variable d'environnement
 REDIS_URL = os.environ.get('REDIS_URL')
 
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [REDIS_URL],
-        },
-    },
-}
+
+ALLOWED_HOSTS = [
+    'miche-kazadi-djangowhat-sppclone-1.onrender.com', 
+    'django-whatsapp-clone-app.web.app',
+    'localhost',
+    '127.0.0.1'
+]
 # Application definition
 
 INSTALLED_APPS = [
