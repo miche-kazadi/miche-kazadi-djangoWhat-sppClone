@@ -8,7 +8,6 @@ export default function Chat() {
   const [conversation, setConversation] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  // Correction ici : Nom unique "selectedImage"
   const [selectedImage, setSelectedImage] = useState(null);
 
   const scrollRef = useRef(null);
@@ -181,7 +180,12 @@ export default function Chat() {
 
                 {msg.image && (
                   <img
-                    src={msg.image.startsWith('http') ? msg.image : `${baseURL}${msg.image}`}
+                    src={
+                      msg.image.startsWith('http')
+                        ? msg.image // Si c'est déjà une URL complète (Cloudinary), on l'utilise telle quelle
+                        : `${baseURL}${msg.image.startsWith('/') ? '' : '/'}${msg.image}`
+                      // Si c'est un chemin local, on ajoute le baseURL proprement
+                    }
                     alt="message"
                     style={{
                       maxWidth: "200px",
