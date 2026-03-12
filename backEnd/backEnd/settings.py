@@ -180,12 +180,23 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'staticfiles/media/')
 
 # Dis à Django d'utiliser ton fichier asgi.py pour les WebSockets
 
-INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
+# Supprimez cette ligne : INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
 
+# Gardez ceci (configuration de Cloudinary) :
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUD_NAME'),
     'API_KEY': os.environ.get('API_KEY'),
     'API_SECRET': os.environ.get('API_SECRET'),
+}
+
+# Utilisez plutôt ce bloc STORAGES (recommandé pour Django 6.0) :
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
 }
 # Ceci force Django à utiliser Cloudinary pour les fichiers média
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
