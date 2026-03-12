@@ -172,12 +172,15 @@ USE_TZ = True
 # STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # L'URL pour les fichiers téléchargés par les utilisateurs (que tu as configuré avant)
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'staticfiles/media/')
 
 
 # Dis à Django d'utiliser ton fichier asgi.py pour les WebSockets
 
+INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 
 # À mettre tout à la fin de settings.py
