@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'users',
     'channels',
     'chats',
+    'cloudinary',
+    'cloudinary_storage',
     'corsheaders',
     'rest_framework.authtoken',
     ]
@@ -180,9 +182,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'staticfiles/media/')
 
 INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
 
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUD_NAME'),
+    'API_KEY': os.environ.get('API_KEY'),
+    'API_SECRET': os.environ.get('API_SECRET'),
+}
+# Ceci force Django à utiliser Cloudinary pour les fichiers média
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
-
 # À mettre tout à la fin de settings.py
 ASGI_APPLICATION = 'backEnd.asgi.application'
 
