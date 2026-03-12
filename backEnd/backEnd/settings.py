@@ -1,3 +1,4 @@
+import os
 """
 Django settings for backEnd project.
 
@@ -25,7 +26,7 @@ SECRET_KEY = 'django-insecure-abehpu(5_jgyu-gpvg6@e2lc1loubr*b@xxzdxg%=zxc@nu5^u
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-SECRET_KEY = os.environ.get('redis://red-d6p0g67afjfc739ff3lg:6379')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 # Dans settings.py
 ALLOWED_HOSTS = [
     'miche-kazadi-djangowhat-sppclone-1.onrender.com',
@@ -168,7 +169,6 @@ STATIC_URL = 'static/'
 # STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # L'URL pour les fichiers téléchargés par les utilisateurs (que tu as configuré avant)
-import os
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'staticfiles/media/')
 
